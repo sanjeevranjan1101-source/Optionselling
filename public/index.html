@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Options Enterprise — Option Selling Platform (Static)</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;color-scheme:dark}
+    body{margin:0;font-family:Inter,Segoe UI,system-ui,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#041025 0%,#071427 100%);color:#e6eef6}
+    .container{max-width:1000px;margin:48px auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{margin:0 0 8px 0}
+    .hero{display:grid;grid-template-columns:1fr 360px;gap:24px;margin-top:24px}
+    .card{background:rgba(255,255,255,0.02);padding:18px;border-radius:12px}
+    .btn{background:var(--accent);color:#04232a;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    footer{margin-top:36px;color:var(--muted);font-size:13px}
+    .form-row{display:flex;gap:8px}
+    input,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:transparent;color:inherit}
+    .list{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+    .item{display:flex;justify-content:space-between;padding:12px;border-radius:8px;background:rgba(255,255,255,0.01)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Options Enterprise</h1>
+        <div style="color:var(--muted)">A platform for professional option sellers — static preview</div>
+      </div>
+      <nav style="color:var(--muted)">Docs • Pricing • Contact</nav>
+    </header>
+
+    <section class="hero">
+      <div class="card">
+        <h2>Sell options with confidence</h2>
+        <p style="color:var(--muted)">This is a static, enterprise-grade scaffold. Later we'll add database-backed persistence, auth, risk management, and real-time market data.</p>
+
+        <h3 style="margin-top:18px">Sample Option Listings</h3>
+        <div id="options" class="list"></div>
+      </div>
+
+      <aside class="card">
+        <h3>Contact Sales / Beta</h3>
+        <form id="contact-form">
+          <div class="form-row"><input name="name" placeholder="Your name" required></div>
+          <div class="form-row"><input name="email" placeholder="Email" required></div>
+          <div class="form-row" style="margin-top:8px"><textarea name="message" rows="4" placeholder="Message"></textarea></div>
+          <div style="margin-top:10px"><button class="btn" type="submit">Send</button></div>
+          <div id="contact-status" style="margin-top:8px;color:var(--muted)"></div>
+        </form>
+      </aside>
+    </section>
+
+    <footer>
+      <div>&copy; 2026 Options Enterprise — Static prototype</div>
+    </footer>
+  </div>
+
+  <script>
+    async function loadOptions(){
+      try{
+        const res = await fetch('/api/options');
+        const data = await res.json();
+        const el = document.getElementById('options');
+        el.innerHTML = '';
+        data.forEach((o) => {
+          const div = document.createElement('div');
+          div.className = 'item';
+          div.innerHTML = `<div><strong>${o.ticker}</strong> · ${o.strategy} · expires ${o.expiry}</div><div style="color:var(--muted)">$${o.premium}</div>`;
+          el.appendChild(div);
+        });
+      }catch(e){ console.error(e); }
+    }
+
+    document.getElementById('contact-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const form = e.target;
+      const data = { name: form.name.value, email: form.email.value, message: form.message.value };
+      const status = document.getElementById('contact-status');
+      status.textContent = 'Sending…';
+      try{
+        const res = await fetch('/api/contact', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        const j = await res.json();
+        status.textContent = j.ok ? 'Thanks — we received your message.' : 'Error sending';
+        form.reset();
+      }catch(err){ status.textContent = 'Network error'; }
+    });
+
+    loadOptions();
+  </script>
+</body>
+</html>
